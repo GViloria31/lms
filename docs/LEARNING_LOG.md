@@ -115,8 +115,72 @@ ALTER TABLE users DROP COLUMN role;
 
 ---
 
-## Step 2 — (next) Role enum + User model
-_To be filled in._
+## Step 2 — Role enum + User model *(in progress)*
+**Date:** 2026-10-31
+
+### Goal
+Turn the `role` string into a PHP enum, so the code uses `Role::Admin` instead of typing `'admin'` everywhere, and add `isAdmin()` to the User model.
+
+### What I did
+1. Generated a string-backed enum `App\Enums\Role` (`Admin`, `User`) with a `label()` method.
+2. Cast the `role` column to the enum in `User::casts()`.
+3. Added `isAdmin()` to the User model.
+4. Tested in Tinker with real users made by the factory.
+5. Checked code style with Pint.
+
+### Commands
+```bash
+php artisan make:enum Enums/Role --string     # create app/Enums/Role.php
+php artisan tinker                            # open the console to test
+```
+```php
+// inside tinker
+$u = App\Models\User::first();      // returned null (table empty)
+$u->role;                           // null too, because $u is null
+$u = App\Models\User::factory()->create();                                   // create a normal user
+$u->role;                           // App\Enums\Role::User
+$u->isAdmin();                      // false
+$u->role->label();                  // "User"
+$a = App\Models\User::factory()->create(['role' => App\Enums\Role::Admin]);  // create an admin
+$a->isAdmin();                      // true
+exit
+```
+```bash
+# tidy the code with Pint (run from the lms folder; never open the pint file itself)
+.\vendor\bin\pint --test -v app/Enums app/Models/User.php   # 1. check style (no changes made) -> "fail"
+# fixed Role.php closing braces by hand
+.\vendor\bin\pint --dirty -v                                # 2. let Pint fix the rest
+git diff                                                    # 3. review what changed
+.\vendor\bin\pint --test                                    # 4. re-check -> "passed"
+```
+
+### Why
+- **Enum instead of strings:** typing `'admin'` everywhere invites typos (`'admn'`) that PHP won't catch. `Role::Admin` is checked by PHP, and the editor autocompletes it.
+- **`--string` (backed enum):** each case has a string value (`'admin'`), which is what's actually stored in the DB column.
+- **Cast (`'role' => Role::class`):** Laravel converts the DB string to the enum when reading, and back to a string when saving, automatically.
+- **`isAdmin()` on the model:** the role check lives in one place. If the rule changes later, I change one method.
+- **Pint:** formats code to Laravel's standard style. It only changes spacing, never behavior. I run it before every commit.
+
+### Concepts learned
+- **Enum** = a fixed list of allowed values. **Backed enum** = each value maps to a string/int (`->value`).
+- **Cast** = automatic type conversion between the DB and PHP.
+- **Factory** = generates fake rows for testing. `create()` saves to the DB; `make()` doesn't.
+- **Tinker** = console for running PHP against the app.
+- **Pint** = code style fixer (`--test` checks, plain run fixes, `--dirty` = changed files only).
+
+### Mistakes / errors I hit (and the fix)
+- `User::first()` returned `null`. The `users` table had no rows yet, because migrations only create tables, not data. **Fix:** created users with `User::factory()->create()`.
+- Pint flagged style issues: indentation and trailing spaces in `Role.php`, and blank lines in `User.php`. **Fix:** lined up the `}` by hand, then ran `pint --dirty`.
+
+### Verified
+- [x] DB has 2 test users: #1 `user` (`isAdmin` false), #2 `admin` (`isAdmin` true)
+- [x] Code tidied (`pint --test` → `passed`)
+- [ ] Committed to Git
+
+---
+
+## Command Reference
+All commands and snippets live in **[COMMANDS.md](COMMANDS.md)**.
 
 ---
 

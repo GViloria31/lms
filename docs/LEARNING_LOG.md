@@ -115,7 +115,7 @@ ALTER TABLE users DROP COLUMN role;
 
 ---
 
-## Step 2 — Role enum + User model *(in progress)*
+## Step 2 — Role enum + User model
 **Date:** 2026-10-31
 
 ### Goal
@@ -152,6 +152,13 @@ exit
 .\vendor\bin\pint --dirty -v                                # 2. let Pint fix the rest
 git diff                                                    # 3. review what changed
 .\vendor\bin\pint --test                                    # 4. re-check -> "passed"
+# removed the empty line inside casts() by hand
+
+# save the step in Git (on branch feature/auth)
+git status                                          # see what will be saved
+git add .                                           # stage everything
+git commit -m "Add Role enum and isAdmin to User model"
+git log --oneline -3                                # confirm the commit (a4185f2)
 ```
 
 ### Why
@@ -175,7 +182,12 @@ git diff                                                    # 3. review what cha
 ### Verified
 - [x] DB has 2 test users: #1 `user` (`isAdmin` false), #2 `admin` (`isAdmin` true)
 - [x] Code tidied (`pint --test` → `passed`)
-- [ ] Committed to Git
+- [x] Committed to Git (`a4185f2` on `feature/auth`)
+
+---
+
+## Step 3 — (next)
+_To be filled in._
 
 ---
 

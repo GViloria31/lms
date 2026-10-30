@@ -166,7 +166,8 @@ Common rules in its output:
 ### Git
 | Command | What it does |
 |---|---|
-| `git status` | What changed? (use constantly) |
+| `git status` | What changed? (use constantly, **always right before `git commit`**) |
+| `git status -s` | Short version. Left column = staged (`M `, `A `), right column = not staged (` M`), `??` = new untracked file |
 | `git add .` | Stage all changes |
 | `git commit -m "Message"` | Save a snapshot (imperative message: "Add …", "Fix …") |
 | `git log --oneline --graph --all` | Visual history |
@@ -197,6 +198,7 @@ Common rules in its output:
 |---|---|---|
 | `Parse error: ... expecting "function"` | PHP can't read the file (syntax) | Check file + line number; `php -l` the file |
 | `Attempt to assign property "x" on null` | The variable is empty; it was never set | Find the line that should create it and check it ran |
+| `warning: ... CRLF will be replaced by LF` (on `git add`) | Just a warning. A file has Windows line endings (CRLF); `.gitattributes` makes Git store it with LF (the standard for code) | Nothing. Keep going with the commit |
 | `User::first()` returns `null` | No rows in the table yet (migrations create tables, not data) | Create a row: `User::factory()->create()` |
 | `Class "Role" not found` | Short name used without import | Use the full name `App\Enums\Role` or add `use App\Enums\Role;` |
 

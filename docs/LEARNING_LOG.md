@@ -194,7 +194,7 @@ git branch -vv                                      # check: shows [origin/featu
 
 ---
 
-## Step 3 — Login & register with Laravel Breeze *(in progress)*
+## Step 3 — Login & register with Laravel Breeze
 **Date:** 2026-10-31 · **Branch:** `feature/auth`
 
 ### Goal
@@ -224,6 +224,13 @@ php artisan serve                       # test in the browser at http://localhos
 #   logout -> login as factory admin (corkery.bradley@example.com / password)
 #   logged out -> /dashboard redirects to /login
 .\vendor\bin\pint --test                # style check -> "passed" (Breeze code already follows Laravel style)
+
+# save + back up
+git status
+git add .                               # warning: CRLF will be replaced by LF (harmless, see Mistakes)
+git commit -m "Install Breeze with Blade for authentication"
+git log --oneline -1                    # checked the message for typos before pushing
+git push                                # plain push (branch already linked by -u in Step 2)
 ```
 
 ### What Breeze added
@@ -255,6 +262,8 @@ php artisan serve                       # test in the browser at http://localhos
 
 ### Mistakes / errors I hit (and the fix)
 - **The installer didn't ask about dark mode or the testing framework.** Because I typed the stack (`blade`) in the command, Breeze skipped all questions and used the defaults: **no dark mode, PHPUnit**. That's what I wanted anyway. (Running `php artisan breeze:install` with no stack would ask everything.)
+- **`git add .` warned: `in the working copy of 'package.json', CRLF will be replaced by LF`.** Just a warning, and the files were staged. npm saved `package.json` with Windows line endings (CRLF). The project's `.gitattributes` (`* text=auto eol=lf`) tells Git to store all text files with LF. **Nothing to fix.**
+- **Files edited after `git add .` weren't in the commit.** Two doc lines were changed between `git add` and `git commit`, so they stayed unstaged. **Fix:** they went into the next commit. **Habit:** run `git status` right before `git commit`. Red ` M` = not staged, green `M ` = staged.
 
 ### Verified
 - [x] Breeze installed, 20 routes listed
@@ -262,7 +271,12 @@ php artisan serve                       # test in the browser at http://localhos
 - [x] Tested in the browser: register, logout, login as factory admin, /dashboard blocked when logged out
 - [x] New account saved in DB: user #3, `role = user`
 - [x] Code style checked (`pint --test` → passed)
-- [ ] Committed + pushed
+- [x] Committed + pushed (`c2f3b25` on `origin/feature/auth`)
+
+---
+
+## Step 4 — (next)
+_To be filled in._
 
 ---
 

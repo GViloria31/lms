@@ -110,8 +110,8 @@ ALTER TABLE users DROP COLUMN role;
 ### Verified
 - [x] `role` column exists in `users`, `VARCHAR(255)`, default `user`
 - [x] Migration listed in the `migrations` table (batch 2)
-- [ ] Tested `php artisan migrate:rollback` then `php artisan migrate`
-- [ ] Committed to Git
+- [x] Tested `php artisan migrate:rollback` then `php artisan migrate`
+- [x] Committed to Git
 
 ---
 

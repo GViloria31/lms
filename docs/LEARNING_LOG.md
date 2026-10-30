@@ -159,6 +159,12 @@ git status                                          # see what will be saved
 git add .                                           # stage everything
 git commit -m "Add Role enum and isAdmin to User model"
 git log --oneline -3                                # confirm the commit (a4185f2)
+
+# commit the log update, then back up the branch to GitHub
+git add docs/LEARNING_LOG.md
+git commit -m "Update learning log for step 2"      # (typo "lof" slipped into the real message, e51d6e2)
+git push -u origin feature/auth                     # first push: creates the branch on GitHub + links it
+git branch -vv                                      # check: shows [origin/feature/auth] = linked
 ```
 
 ### Why
@@ -178,16 +184,97 @@ git log --oneline -3                                # confirm the commit (a4185f
 ### Mistakes / errors I hit (and the fix)
 - `User::first()` returned `null`. The `users` table had no rows yet, because migrations only create tables, not data. **Fix:** created users with `User::factory()->create()`.
 - Pint flagged style issues: indentation and trailing spaces in `Role.php`, and blank lines in `User.php`. **Fix:** lined up the `}` by hand, then ran `pint --dirty`.
+- Typo in a commit message ("lof"), noticed after pushing. **Left it:** fixing a pushed commit means rewriting history. Next time, check with `git log --oneline -1` and fix with `git commit --amend` **before** pushing.
 
 ### Verified
 - [x] DB has 2 test users: #1 `user` (`isAdmin` false), #2 `admin` (`isAdmin` true)
 - [x] Code tidied (`pint --test` → `passed`)
 - [x] Committed to Git (`a4185f2` on `feature/auth`)
+- [x] Log committed (`e51d6e2`) and branch pushed to GitHub (`origin/feature/auth`)
 
 ---
 
-## Step 3 — (next)
-_To be filled in._
+## Step 3 — Login & register with Laravel Breeze *(in progress)*
+**Date:** 2026-10-31 · **Branch:** `feature/auth`
+
+### Goal
+Let real users register, log in and log out, using Laravel's official starter kit instead of writing auth by hand.
+
+### Decisions
+- **Blade stack, not React/Vue:** I'm focusing on Laravel first. With React I'd be learning Laravel + Inertia + React at once. Backend skills carry over later. (React is on the "Later / ideas" list.)
+- **No dark mode:** it keeps the views easier to study. Postponed to "Later / ideas".
+- **PHPUnit, not Pest:** it's what the project already uses.
+
+### What I did
+1. Installed the Breeze package with Composer (dev only).
+2. Ran the Breeze installer with the Blade stack. It generated controllers, views, routes and tests, and ran `npm install` + `npm run build`.
+3. Ran migrations: nothing to migrate.
+4. Checked the new routes and ran the test suite.
+
+### Commands
+```bash
+composer require laravel/breeze --dev   # download Breeze (dev dependency)
+php artisan breeze:install blade        # generate auth files with the Blade stack
+php artisan migrate                     # -> "Nothing to migrate"
+git status                              # see what Breeze added (??) and changed (M)
+php artisan route:list --except-vendor  # list the app's routes (login, register, dashboard, profile...)
+php artisan test                        # run all tests -> 25 passed
+php artisan serve                       # test in the browser at http://localhost:8000
+#   /register -> created my account -> landed on /dashboard
+#   logout -> login as factory admin (corkery.bradley@example.com / password)
+#   logged out -> /dashboard redirects to /login
+.\vendor\bin\pint --test                # style check -> "passed" (Breeze code already follows Laravel style)
+```
+
+### What Breeze added
+| Where | What |
+|---|---|
+| `routes/auth.php` | All auth routes (login, register, logout, password reset, email verify) |
+| `routes/web.php` | `/dashboard` and `/profile` routes, protected by the `auth` middleware |
+| `app/Http/Controllers/Auth/` | One controller per auth action (e.g. `RegisteredUserController`) |
+| `app/Http/Controllers/ProfileController.php` | Edit/update/delete own profile |
+| `app/Http/Requests/` | Form validation classes (`LoginRequest`, `ProfileUpdateRequest`) |
+| `app/View/Components/` | Layout components (`AppLayout`, `GuestLayout`) |
+| `resources/views/auth/`, `layouts/`, `components/`, `profile/`, `dashboard.blade.php` | The pages |
+| `tailwind.config.js`, `postcss.config.js`, `vite.config.js` | Frontend build setup (Tailwind CSS) |
+| `tests/Feature/Auth/`, `ProfileTest.php` | Tests for every auth feature |
+
+### Why
+- **Why Breeze:** auth is easy to get wrong, and mistakes are security holes. Breeze is official, small, and copies the code **into my project**, so I can read and change it.
+- **Why "Nothing to migrate":** Laravel's default migrations (Step 0) already created everything auth needs: `users`, `password_reset_tokens`, `sessions`. Breeze only adds code, not tables.
+- **Why `--dev`:** Breeze is only the installer. After it copies the files, the app doesn't need the package to run.
+
+### Concepts learned
+- **Starter kit** = generated code you own, not a library hidden in `vendor/`.
+- **Middleware `auth`** = a gate in front of a route. Not logged in → redirected to `/login`.
+- **Route file** = maps a URL + HTTP method (GET/POST/PATCH/DELETE) to a controller method.
+- **Feature test** = code that pretends to be a browser and checks the app responds correctly.
+- **Sessions table** = how Laravel remembers who is logged in. Each browser gets a row; `user_id` is filled while logged in and `NULL` after logout.
+- **Registering = always a normal user.** My account got `role = user` from the column default (Step 1). The register form has no role field, so nobody can sign up as admin. That's safe by default.
+- **Timestamps are in UTC.** `created_at` showed `2026-10-30 23:05`, but my local time was `2026-10-31 07:05` (UTC+8). Laravel stores times in UTC (`config/app.php` → `timezone`), which is the standard practice. Convert to local time only when displaying.
+
+### Mistakes / errors I hit (and the fix)
+- **The installer didn't ask about dark mode or the testing framework.** Because I typed the stack (`blade`) in the command, Breeze skipped all questions and used the defaults: **no dark mode, PHPUnit**. That's what I wanted anyway. (Running `php artisan breeze:install` with no stack would ask everything.)
+
+### Verified
+- [x] Breeze installed, 20 routes listed
+- [x] `php artisan test` → 25 passed (61 assertions)
+- [x] Tested in the browser: register, logout, login as factory admin, /dashboard blocked when logged out
+- [x] New account saved in DB: user #3, `role = user`
+- [x] Code style checked (`pint --test` → passed)
+- [ ] Committed + pushed
+
+---
+
+## Later / ideas
+Things I decided to postpone, and why. Revisit once the main features work.
+
+- [ ] **Add dark mode.** *(decided 2026-10-31, Step 3)*
+  - **What:** add Tailwind `dark:` classes (e.g. `dark:bg-gray-800 dark:text-gray-200`) so pages follow the visitor's OS dark setting.
+  - **Why later:** it doubles the classes in every view, which makes the Breeze files harder to study, and every new page would need `dark:` versions too. It doesn't affect any Laravel logic.
+  - **When:** after the main pages are built (courses, lessons, admin). Do it as its own step on its own branch, e.g. `feature/dark-mode`.
+- [ ] **Learn React, then try React + Inertia in a future Laravel project.** *(decided 2026-10-31, Step 3)*
+  - **Why later:** I chose Blade so I can focus on Laravel first. Backend skills (routes, models, auth) carry over to any frontend.
 
 ---
 

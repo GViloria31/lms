@@ -13,6 +13,59 @@ Look things up here; for the reasoning behind each step, see [LEARNING_LOG.md](L
 | `php artisan list make` | — | Show every `make:` command |
 | `php artisan make:enum --help` | — | Show options for any command |
 
+### Composer: install packages
+**What it is:** PHP's package manager. It downloads libraries into `vendor/` and records them in `composer.json` + `composer.lock`.
+
+| Command | What it does |
+|---|---|
+| `composer require vendor/package` | Install a package the app needs to run |
+| `composer require vendor/package --dev` | Install a package only needed while developing (tools, installers, test libraries) |
+| `composer install` | Install everything listed in `composer.lock` (after cloning the project) |
+
+### Laravel Breeze: auth starter kit
+**What it is:** Laravel's official starter kit. One command generates register, login, logout, forgot/reset password, email verification, a dashboard, a profile page, and tests for all of them.
+**Why use it:** auth is security-sensitive and easy to get wrong. Breeze copies the code **into my project** (controllers, views, routes), so I own it and can read or change it.
+**How to use it (once, at the start of a project):**
+```bash
+composer require laravel/breeze --dev    # 1. download the installer
+php artisan breeze:install blade         # 2. generate files (stack: blade | livewire | react | vue | api)
+php artisan migrate                      # 3. usually "Nothing to migrate" (default tables already exist)
+```
+- Typing the stack (`blade`) **skips the questions** and uses defaults: no dark mode, PHPUnit.
+- `php artisan breeze:install` with no stack → asks for stack, dark mode, and testing framework.
+- ⚠️ It **overwrites** `routes/web.php`, `vite.config.js`, CSS/JS files. Run it on a fresh project, with everything committed first.
+
+**Breeze pages to test in the browser** (`php artisan serve` first):
+| URL | What it is | Logged out | Logged in |
+|---|---|---|---|
+| `/register` | Sign-up form | ✅ shows | redirects to `/dashboard` |
+| `/login` | Login form | ✅ shows | redirects to `/dashboard` |
+| `/dashboard` | Members-only page | redirects to `/login` | ✅ shows |
+| `/profile` | Edit name/email/password, delete account | redirects to `/login` | ✅ shows |
+| `/forgot-password` | Request a reset link (email goes to `storage/logs/laravel.log` in dev) | ✅ shows | redirects |
+
+**Check auth in the DB (Tinker):**
+```php
+App\Models\User::latest()->first();              // newest registered user
+DB::table('sessions')->get(['user_id', 'last_activity']);  // user_id NULL = logged out
+```
+
+### Artisan: inspect the app
+| Command | What it does |
+|---|---|
+| `php artisan route:list` | List every URL, its HTTP method, name and controller |
+| `php artisan route:list --except-vendor` | Only my app's routes (hides package routes) |
+| `php artisan --version` | Show Laravel version |
+
+### Tests (PHPUnit)
+**What they are:** code in `tests/` that checks the app works (e.g. "a user can register"). Tests use a temporary in-memory SQLite DB (see `phpunit.xml`), so **my MySQL data is never touched**.
+**Why:** after changing code, one command tells me if I broke something.
+
+| Command | What it does |
+|---|---|
+| `php artisan test` | Run all tests (green ✓ = pass, red ⨯ = fail) |
+| `php artisan test --filter=RegistrationTest` | Run only tests matching a name |
+
 ### Artisan: database
 | Command | What it does |
 |---|---|
@@ -124,6 +177,13 @@ Common rules in its output:
 | `git push` / `git pull` | Upload / download commits |
 | `git diff` | Exact line changes before committing |
 | `git restore file` | ⚠️ Discard uncommitted changes to a file |
+| `git branch -vv` | List branches + which GitHub branch each is linked to (`[origin/name]`). No brackets = never pushed |
+| `git commit --amend -m "Fixed message"` | Replace the **last** commit's message (also adds any staged changes to it) |
+
+**Fixing a commit message (`--amend`):**
+- **What:** rewrites your most recent commit, giving it a new message and a new commit ID.
+- **When:** only **before** `git push`. Habit: `git log --oneline -1` to check the message before pushing.
+- **After pushing:** leave it. Amending a pushed commit needs `git push --force`, which overwrites GitHub's history and can break teammates' copies. A typo isn't worth that.
 
 ### Run the app
 | Command | What it does |
